@@ -45,9 +45,20 @@ function animate(){
   if(xsp < 0.5 || xsp > -0.5){ xsp += (keyboard.d ? 0.1 : 0) - (keyboard.a ? 0.1 : 0); }
   if(zsp < 0.5 || zsp > -0.5){ zsp += (keyboard.s ? 0.1 : 0) - (keyboard.w ? 0.1 : 0); }
   if(ysp < 0.5 || ysp > -0.5){ ysp += (keyboard.space ? 0.1 : 0) - (keyboard.shift ? 0.1 : 0); }
-  xsp -= Math.sign(xsp) * 0.01;
-  zsp -= Math.sign(zsp) * 0.01;
-  ysp -= Math.sign(ysp) * 0.01;
+  
+  xsp -= Math.sign(xsp) * 0.05;
+  zsp -= Math.sign(zsp) * 0.05;
+  ysp -= Math.sign(ysp) * 0.05;
+
+  if (xsp < 0.05 && xsp > -0.05){
+    xsp = 0;
+  }
+  if (zsp < 0.05 && zsp > -0.05){
+    zsp = 0;
+  }
+  if (ysp < 0.05 && ysp > -0.05){
+    ysp = 0;
+  }
 
   guy.position.set(
     guy.position.x + xsp,
