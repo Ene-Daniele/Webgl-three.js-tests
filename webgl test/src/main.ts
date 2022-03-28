@@ -2,7 +2,7 @@ import * as THREE from "three"
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas")!
 });
@@ -21,7 +21,8 @@ const gridHelper = new THREE.GridHelper(200, 50);
 const lightHelper = new THREE.PointLightHelper(light1);
 scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3))
 
-const guy = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshStandardMaterial({color: 0xff0000}));
+const guy = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 100, 7), new THREE.MeshStandardMaterial({color: 0xff0000}));
+guy.add(camera);
 
 const keyboard = {
   w: false,
@@ -37,10 +38,19 @@ var zsp = 0;
 var ysp = 0;
 
 scene.add(guy);
+document.addEventListener("mousemove", event => {
+  guy.rotateY(-event.movementX / 100);
+  guy.rotateX(-event.movementY / 100);
+})
 
 function animate(){
 
   controls.update();
+
+  controls.target = guy.position;
+  controls.enablePan = false;
+  controls.enableZoom = false;
+  
 
   if(xsp < 0.5 || xsp > -0.5){ xsp += (keyboard.d ? 0.1 : 0) - (keyboard.a ? 0.1 : 0); }
   if(zsp < 0.5 || zsp > -0.5){ zsp += (keyboard.s ? 0.1 : 0) - (keyboard.w ? 0.1 : 0); }
@@ -75,15 +85,19 @@ animate();
 document.addEventListener("keydown", (e) => {
   switch(e.key){
     case "w":
+    case "W":
       keyboard.w = true;
       break;
     case "a":
+    case "A":
       keyboard.a = true;
       break;
     case "s":
+    case "S":
       keyboard.s = true;
       break;
     case "d":
+    case "D":
       keyboard.d = true;
       break;
     case "Shift":
@@ -97,15 +111,19 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("keyup", (e) => {
   switch(e.key){
     case "w":
+    case "W":
       keyboard.w = false;
       break;
     case "a":
+    case "A":
       keyboard.a = false;
       break;
     case "s":
+    case "S":
       keyboard.s = false;
       break;
     case "d":
+    case "D":
       keyboard.d = false;
       break;
     case "Shift":
