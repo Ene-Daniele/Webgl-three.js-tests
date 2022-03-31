@@ -19,9 +19,10 @@ const controls = new OrbitControls(camera, renderer.domElement)
 
 const gridHelper = new THREE.GridHelper(200, 50); 
 const lightHelper = new THREE.PointLightHelper(light1);
-scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3))
+scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3), new THREE.CameraHelper(camera))
 
 const guy = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 100, 7), new THREE.MeshStandardMaterial({color: 0xff0000}));
+
 guy.add(camera);
 
 const keyboard = {
@@ -40,35 +41,29 @@ var ysp = 0;
 scene.add(guy);
 document.addEventListener("mousemove", event => {
   guy.rotateY(-event.movementX / 100);
-  guy.rotateX(-event.movementY / 100);
 })
+
+controls.target = guy.position;
+controls.enablePan = false;
+controls.enableZoom = false;
+controls.enableRotate = false;
 
 function animate(){
 
   controls.update();
 
-  controls.target = guy.position;
-  controls.enablePan = false;
-  controls.enableZoom = false;
-  
+  const orientationX = Math.sign(guy.position.x) - Math.sign(camera.position.x)
+  const orientationZ = Math.sign(guy.position.z) - Math.sign(camera.position.z)
 
-  if(xsp < 0.5 || xsp > -0.5){ xsp += (keyboard.d ? 0.1 : 0) - (keyboard.a ? 0.1 : 0); }
-  if(zsp < 0.5 || zsp > -0.5){ zsp += (keyboard.s ? 0.1 : 0) - (keyboard.w ? 0.1 : 0); }
-  if(ysp < 0.5 || ysp > -0.5){ ysp += (keyboard.space ? 0.1 : 0) - (keyboard.shift ? 0.1 : 0); }
-  
-  xsp -= Math.sign(xsp) * 0.05;
-  zsp -= Math.sign(zsp) * 0.05;
-  ysp -= Math.sign(ysp) * 0.05;
+  const ab = Math.abs(guy.position.x - camera.position.x)
+  const bc = Math.abs(guy.position.z - camera.position.z)
+  const ca = Math.sqrt(ab * ab + bc * bc)
 
-  if (xsp < 0.05 && xsp > -0.05){
-    xsp = 0;
-  }
-  if (zsp < 0.05 && zsp > -0.05){
-    zsp = 0;
-  }
-  if (ysp < 0.05 && ysp > -0.05){
-    ysp = 0;
-  }
+  const verticalAngle = (Math.acos(ab / ca) * 180 / Math.PI) / 90;
+  const horizontalAngle = (Math.acos(bc / ca) * 180 / Math.PI) / 90;
+
+  xsp = (horizontalAngle * (keyboard.w ? 1 : 0) * orientationX)
+  zsp = (verticalAngle * (keyboard.w ? 1 : 0) * orientationZ)  
 
   guy.position.set(
     guy.position.x + xsp,
