@@ -2,7 +2,7 @@ import * as THREE from "three"
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas")!
 });
@@ -19,11 +19,9 @@ const controls = new OrbitControls(camera, renderer.domElement)
 
 const gridHelper = new THREE.GridHelper(200, 50); 
 const lightHelper = new THREE.PointLightHelper(light1);
-scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3), new THREE.CameraHelper(camera))
+scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3))
 
 const guy = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 100, 7), new THREE.MeshStandardMaterial({color: 0xff0000}));
-
-guy.add(camera);
 
 const keyboard = {
   w: false,
@@ -32,6 +30,7 @@ const keyboard = {
   d: false,
   shift: false,
   space: false,
+  alt: false,
 }
 
 var xsp = 0;
@@ -40,8 +39,18 @@ var ysp = 0;
 
 scene.add(guy);
 document.addEventListener("mousemove", event => {
-  guy.rotateY(-event.movementX / 100);
+  if (!keyboard.alt){
+    controls.autoRotateSpeed = event.movementX * 2
+    controls.autoRotate = true;
+  }
 })
+var timeout = 0;
+document.onmousemove = function(){
+  clearTimeout(timeout);
+  timeout = setTimeout(function(){
+    controls.autoRotate = false;
+  }, 0);
+}
 
 controls.target = guy.position;
 controls.enablePan = false;
@@ -52,24 +61,29 @@ function animate(){
 
   controls.update();
 
-  const orientationX = Math.sign(guy.position.x) - Math.sign(camera.position.x)
-  const orientationZ = Math.sign(guy.position.z) - Math.sign(camera.position.z)
+  var orientationX = -Math.sign(camera.position.x - guy.position.x)
+  var orientationZ = -Math.sign(camera.position.z - guy.position.z)
 
-  const ab = Math.abs(guy.position.x - camera.position.x)
-  const bc = Math.abs(guy.position.z - camera.position.z)
-  const ca = Math.sqrt(ab * ab + bc * bc)
+  var ab = Math.abs(guy.position.x - camera.position.x)
+  var bc = Math.abs(guy.position.z - camera.position.z)
+  var ca = Math.sqrt(ab * ab + bc * bc)
 
-  const verticalAngle = (Math.acos(ab / ca) * 180 / Math.PI) / 90;
-  const horizontalAngle = (Math.acos(bc / ca) * 180 / Math.PI) / 90;
+  var verticalAngle = (Math.acos(ab / ca) * 180 / Math.PI) / 90;
+  var horizontalAngle = (Math.acos(bc / ca) * 180 / Math.PI) / 90;
 
-  xsp = (horizontalAngle * (keyboard.w ? 1 : 0) * orientationX)
-  zsp = (verticalAngle * (keyboard.w ? 1 : 0) * orientationZ)  
+  xsp = (horizontalAngle * orientationX * (keyboard.w ? 1 : 0))
+  zsp = (verticalAngle * orientationZ * (keyboard.w ? 1 : 0))   
 
   guy.position.set(
     guy.position.x + xsp,
     guy.position.y + ysp,
     guy.position.z + zsp,
   );
+  camera.position.set(
+    camera.position.x + xsp,
+    camera.position.y + ysp,
+    camera.position.z + zsp,
+  )
 
   window.requestAnimationFrame(animate);
   renderer.render(scene, camera)
@@ -101,7 +115,12 @@ document.addEventListener("keydown", (e) => {
     case " ":
       keyboard.space = true;
       break;
+    case "Control":
+      keyboard.alt = true;
+      break;
   }
+  console.log(e.key);
+  
 })
 document.addEventListener("keyup", (e) => {
   switch(e.key){
@@ -126,6 +145,9 @@ document.addEventListener("keyup", (e) => {
       break;
     case " ":
       keyboard.space = false;
+      break;
+    case "Control":
+      keyboard.alt = false;
       break;
   }
 })
