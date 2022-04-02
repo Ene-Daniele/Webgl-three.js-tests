@@ -1,5 +1,7 @@
 import * as THREE from "three"
+import { Box3 } from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
+import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
@@ -11,7 +13,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth * 0.95, window.innerHeight * 0.95);
 camera.position.set(10, 20, 40);
 
-const light1 = new THREE.PointLight(0xff0000);
+const light1 = new THREE.PointLight(0xffffff);
 light1.position.set(0,30,0);
 
 const gridHelper = new THREE.GridHelper(200, 50); 
@@ -22,12 +24,15 @@ const controls = new OrbitControls(camera, renderer.domElement)
 
 const player = {
   mesh : new THREE.Mesh(new THREE.BoxGeometry(20 , 20, 20, 7), new THREE.MeshStandardMaterial({color: 0xff0000})),
+  hitbox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
   speed : {
     x : 0,
     y : 0,
     z : 0
   },
   init : function(){
+    this.mesh.position.y = 0;
+    this.hitbox.setFromObject(this.mesh);
     scene.add(this.mesh);
   },
   update : function(){
@@ -56,7 +61,8 @@ const player = {
     //Friction and rounding
     this.speed.x = Math.round((this.speed.x - Math.sign(this.speed.x) * 0.01) * 100) / 100;
     this.speed.z = Math.round((this.speed.z - Math.sign(this.speed.z) * 0.01) * 100) / 100;
-
+        
+    //* Updating position
     this.mesh.position.set(
       this.mesh.position.x + this.speed.x,
       this.mesh.position.y + this.speed.y,
@@ -67,9 +73,37 @@ const player = {
       camera.position.y + this.speed.y,
       camera.position.z + this.speed.z,
     )
+    
+    //* Updating position of hitbox
+    this.hitbox.copy(this.mesh.geometry.boundingBox as Box3).applyMatrix4(this.mesh.matrixWorld);
+
+    blocks.forEach(block => {
+      //* Updating position of block hitbox
+      block.hitbox.copy(block.geometry.boundingBox as Box3).applyMatrix4(block.matrixWorld);
+
+      //* Revert the position change
+      while (this.hitbox.intersectsBox(block.hitbox)){
+        this.mesh.position.set(
+          this.mesh.position.x - this.speed.x / 10,
+          this.mesh.position.y - this.speed.y / 10,
+          this.mesh.position.z - this.speed.z / 10,
+        );
+        camera.position.set(
+          camera.position.x - this.speed.x / 10,
+          camera.position.y - this.speed.y / 10,
+          camera.position.z - this.speed.z / 10,
+        )
+      }
+    })
   }
 }
 player.init();
+
+const blocks: Block[] = [];
+
+const temp = new Block(50, 0, 50);
+blocks.push(temp)
+scene.add(temp)
 
 const keyboard = {
   w: false,
@@ -138,8 +172,6 @@ document.addEventListener("keydown", (e) => {
       keyboard.alt = true;
       break;
   }
-  console.log(e.key);
-  
 })
 document.addEventListener("keyup", (e) => {
   switch(e.key){
