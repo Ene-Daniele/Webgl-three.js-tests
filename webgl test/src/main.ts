@@ -11,16 +11,18 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth * 0.95, window.innerHeight * 0.95);
-camera.position.set(10, 20, 40);
+camera.position.set(10, 50, 40);
 
 const light1 = new THREE.PointLight(0xffffff);
-light1.position.set(0,30,0);
+light1.position.set(0,90,0);
 
 const gridHelper = new THREE.GridHelper(200, 50); 
 const lightHelper = new THREE.PointLightHelper(light1);
-scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.3), light1)
+scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.7), light1)
 
 const controls = new OrbitControls(camera, renderer.domElement)
+
+const grv = 0.01
 
 const player = {
   mesh : new THREE.Mesh(new THREE.BoxGeometry(20 , 20, 20, 7), new THREE.MeshStandardMaterial({color: 0xff0000})),
@@ -31,11 +33,15 @@ const player = {
     z : 0
   },
   init : function(){
-    this.mesh.position.y = 0;
+    this.mesh.position.y = 30;
     this.hitbox.setFromObject(this.mesh);
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
     scene.add(this.mesh);
   },
   update : function(){
+
+    this.speed.y -= grv;
     
     //Moving away from the camera proportionally
     var orientationX = -Math.sign(camera.position.x - this.mesh.position.x)
@@ -61,7 +67,7 @@ const player = {
     //Friction and rounding
     this.speed.x = Math.round((this.speed.x - Math.sign(this.speed.x) * 0.01) * 100) / 100;
     this.speed.z = Math.round((this.speed.z - Math.sign(this.speed.z) * 0.01) * 100) / 100;
-        
+
     //* Updating position
     this.mesh.position.set(
       this.mesh.position.x + this.speed.x,
@@ -78,22 +84,35 @@ const player = {
     this.hitbox.copy(this.mesh.geometry.boundingBox as Box3).applyMatrix4(this.mesh.matrixWorld);
 
     blocks.forEach(block => {
+      
       //* Updating position of block hitbox
       block.hitbox.copy(block.geometry.boundingBox as Box3).applyMatrix4(block.matrixWorld);
 
-      //* Revert the position change
-      while (this.hitbox.intersectsBox(block.hitbox)){
+      let canJump = false;
+      if (this.hitbox.intersectsBox(block.hitbox)){
+        if(this.mesh.position.y - this.mesh.geometry.parameters.height * 0.95 > block.position.y){
+          
+          this.mesh.position.y += 0.01;
+          camera.position.y += 0.01;
+          this.speed.y = 0;
+          this.speed.x = 0;
+          this.speed.z = 0;
+          canJump = true
+        } else canJump = false
+        //* Revert the position change
         this.mesh.position.set(
-          this.mesh.position.x - this.speed.x / 10,
-          this.mesh.position.y - this.speed.y / 10,
-          this.mesh.position.z - this.speed.z / 10,
-        );
+          this.mesh.position.x - this.speed.x - Math.sign(this.speed.x) * 0.5, 
+          this.mesh.position.y - this.speed.y, 
+          this.mesh.position.z - this.speed.z - Math.sign(this.speed.z) * 0.5,
+          );
         camera.position.set(
-          camera.position.x - this.speed.x / 10,
-          camera.position.y - this.speed.y / 10,
-          camera.position.z - this.speed.z / 10,
-        )
+          camera.position.x - this.speed.x - Math.sign(this.speed.x) * 0.5, 
+          camera.position.y - this.speed.y, 
+          camera.position.z - this.speed.z - Math.sign(this.speed.z) * 0.5,
+          )
+          this.hitbox.copy(this.mesh.geometry.boundingBox as Box3).applyMatrix4(this.mesh.matrixWorld);
       }
+      if (keyboard.space && canJump) this.speed.y = 0.5
     })
   }
 }
@@ -101,7 +120,7 @@ player.init();
 
 const blocks: Block[] = [];
 
-const temp = new Block(50, 0, 50);
+const temp = new Block(0, 0, 0);
 blocks.push(temp)
 scene.add(temp)
 
