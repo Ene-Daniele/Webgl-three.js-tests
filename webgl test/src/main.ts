@@ -5,35 +5,38 @@ import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
+scene.background = new THREE.TextureLoader().load("");
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas") as HTMLCanvasElement 
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth * 0.95, window.innerHeight * 0.95);
-camera.position.set(10, 50, 40);
+camera.position.set(10, 41, 40);
 
 const light1 = new THREE.PointLight(0xffffff);
 light1.position.set(0,90,0);
+light1.intensity = 1.5
 
-const gridHelper = new THREE.GridHelper(200, 50); 
+const gridHelper = new THREE.GridHelper(100, 25); 
 const lightHelper = new THREE.PointLightHelper(light1);
-scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 0.7), light1)
+scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 1.7), light1)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
 const grv = 0.01
 
 const player = {
-  mesh : new THREE.Mesh(new THREE.BoxGeometry(20 , 20, 20, 7), new THREE.MeshStandardMaterial({color: 0xff0000})),
+  mesh : new THREE.Mesh(new THREE.BoxGeometry(20 , 20, 20, 7), new THREE.MeshStandardMaterial({color: "cyan"})),
   hitbox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
+  maxYPos: 0,
   speed : {
     x : 0,
     y : 0,
     z : 0
   },
   init : function(){
-    this.mesh.position.y = 30;
+    this.mesh.position.y = 21;
     this.hitbox.setFromObject(this.mesh);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
@@ -41,7 +44,9 @@ const player = {
   },
   update : function(){
 
+    light1.position.y = this.mesh.position.y + 20
     this.speed.y -= grv;
+    if (this.mesh.position.y > this.maxYPos) this.maxYPos = this.mesh.position.y;
     
     //Moving away from the camera proportionally
     var orientationX = -Math.sign(camera.position.x - this.mesh.position.x)
@@ -90,29 +95,19 @@ const player = {
 
       let canJump = false;
       if (this.hitbox.intersectsBox(block.hitbox)){
-        if(this.mesh.position.y - this.mesh.geometry.parameters.height * 0.95 > block.position.y){
-          
-          this.mesh.position.y += 0.01;
-          camera.position.y += 0.01;
-          this.speed.y = 0;
+        
+        if(this.mesh.position.y > block.position.y){
+          this.speed.y = 0.5;
           this.speed.x = 0;
           this.speed.z = 0;
           canJump = true
-        } else canJump = false
+        } else {
+          canJump = false
+        }
         //* Revert the position change
-        this.mesh.position.set(
-          this.mesh.position.x - this.speed.x - Math.sign(this.speed.x) * 0.5, 
-          this.mesh.position.y - this.speed.y, 
-          this.mesh.position.z - this.speed.z - Math.sign(this.speed.z) * 0.5,
-          );
-        camera.position.set(
-          camera.position.x - this.speed.x - Math.sign(this.speed.x) * 0.5, 
-          camera.position.y - this.speed.y, 
-          camera.position.z - this.speed.z - Math.sign(this.speed.z) * 0.5,
-          )
-          this.hitbox.copy(this.mesh.geometry.boundingBox as Box3).applyMatrix4(this.mesh.matrixWorld);
+        this.hitbox.copy(this.mesh.geometry.boundingBox as Box3).applyMatrix4(this.mesh.matrixWorld);
       }
-      if (keyboard.space && canJump) this.speed.y = 0.5
+      if (keyboard.space && canJump) this.speed.y = 1
     })
   }
 }
@@ -120,7 +115,7 @@ player.init();
 
 const blocks: Block[] = [];
 
-const temp = new Block(0, 0, 0);
+const temp = new Block(25, 0, 25);
 blocks.push(temp)
 scene.add(temp)
 
@@ -160,11 +155,33 @@ function animate(){
  
   player.update();
 
+  if (Math.round(player.maxYPos) % 25 == 0) {
+    
+    for (let i = 0; i < blocks.length - 2; i++){
+      blocks[i].falling = true;
+    }
+    
+    const temp = new Block(getRandomInt(100), player.maxYPos - 20, getRandomInt(100));
+    blocks.push(temp)
+    scene.add(temp)
+  }
+
+  blocks.forEach(block => {
+    if (block.falling) {
+      block.position.y -= 1;
+      block.material = new THREE.MeshStandardMaterial({color: "red"})
+    }
+  })
+
   window.requestAnimationFrame(animate);
   renderer.render(scene, camera)
 }
 
 animate();
+
+function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
 
 document.addEventListener("keydown", (e) => {
   switch(e.key){
