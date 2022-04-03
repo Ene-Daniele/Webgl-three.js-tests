@@ -1,11 +1,13 @@
 import * as THREE from "three"
-import { Box3 } from "three";
+import { Box3, Quaternion } from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
 import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
-scene.background = new THREE.TextureLoader().load("");
+new THREE.TextureLoader().load("https://images.pexels.com/photos/1205301/pexels-photo-1205301.jpeg", function(texture){
+  scene.background = texture
+});
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas") as HTMLCanvasElement 
@@ -18,9 +20,7 @@ const light1 = new THREE.PointLight(0xffffff);
 light1.position.set(0,90,0);
 light1.intensity = 1.5
 
-const gridHelper = new THREE.GridHelper(100, 25); 
-const lightHelper = new THREE.PointLightHelper(light1);
-scene.add(lightHelper,gridHelper, new THREE.AmbientLight(0xff0000, 1.7), light1)
+scene.add(new THREE.AmbientLight(0xff0000, 1.7), light1)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
@@ -96,7 +96,7 @@ const player = {
       let canJump = false;
       if (this.hitbox.intersectsBox(block.hitbox)){
         
-        if(this.mesh.position.y > block.position.y){
+        if(this.mesh.position.y > block.position.y && !block.falling){
           this.speed.y = 0.5;
           this.speed.x = 0;
           this.speed.z = 0;
@@ -160,7 +160,7 @@ function animate(){
     for (let i = 0; i < blocks.length - 2; i++){
       blocks[i].falling = true;
     }
-    
+
     const temp = new Block(getRandomInt(100), player.maxYPos - 20, getRandomInt(100));
     blocks.push(temp)
     scene.add(temp)
@@ -173,8 +173,13 @@ function animate(){
     }
   })
 
-  window.requestAnimationFrame(animate);
-  renderer.render(scene, camera)
+  if (!(player.mesh.position.y < player.maxYPos - 100)){
+    window.requestAnimationFrame(animate);
+    renderer.render(scene, camera)
+  } else {
+    alert("You lost! Your score was: " + Math.round(player.maxYPos))
+    window.location.reload();
+  }
 }
 
 animate();
