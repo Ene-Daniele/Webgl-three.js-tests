@@ -1,13 +1,17 @@
 import * as THREE from "three"
-import { Box3, Quaternion } from "three";
+import { Box3 } from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
 import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
+const world = new THREE.Mesh(new THREE.SphereGeometry(500, 100, 1000, 100), new THREE.MeshStandardMaterial())
 new THREE.TextureLoader().load("https://images.pexels.com/photos/1205301/pexels-photo-1205301.jpeg", function(texture){
-  scene.background = texture
+  world.material.map = texture;
+  world.material.wireframe = true;
+  scene.add(world);
 });
+
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas") as HTMLCanvasElement 
@@ -20,7 +24,7 @@ const light1 = new THREE.PointLight(0xffffff);
 light1.position.set(0,90,0);
 light1.intensity = 1.5
 
-scene.add(new THREE.AmbientLight(0xff0000, 1.7), light1)
+scene.add(new THREE.AmbientLight(0xff0000, 1.7), light1, new THREE.AmbientLight(0xffffff, 0.5))
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
@@ -119,6 +123,16 @@ const temp = new Block(25, 0, 25);
 blocks.push(temp)
 scene.add(temp)
 
+function addStar(){
+  const star = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 24), new THREE.MeshStandardMaterial({color: 0xffffff}))
+  star.position.set(THREE.MathUtils.randFloatSpread(1000),THREE.MathUtils.randFloatSpread(1000),THREE.MathUtils.randFloatSpread(1000))
+  scene.add(star)
+}
+
+for (let i = 0; i < 500; i++){
+  addStar();
+}
+
 const keyboard = {
   w: false,
   a: false,
@@ -128,6 +142,7 @@ const keyboard = {
   space: false,
   alt: false,
 }
+
 
 //Setting up orbiting
 document.addEventListener("mousemove", event => {
@@ -152,6 +167,10 @@ controls.enableRotate = false;
 function animate(){
 
   controls.update();
+
+  world.rotateY(0.001);
+  world.rotateX(0.001);
+  world.position.y = player.mesh.position.y;
  
   player.update();
 
