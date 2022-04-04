@@ -40,6 +40,7 @@ const player = {
     z : 0
   },
   init : function(){
+    player.mesh.material.map = new THREE.TextureLoader().load("https://images.pexels.com/photos/1205301/pexels-photo-1205301.jpeg");
     this.mesh.position.y = 21;
     this.hitbox.setFromObject(this.mesh);
     this.mesh.castShadow = true;
@@ -126,6 +127,7 @@ scene.add(temp)
 function addStar(){
   const star = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 24), new THREE.MeshStandardMaterial({color: 0xffffff}))
   star.position.set(THREE.MathUtils.randFloatSpread(1000),THREE.MathUtils.randFloatSpread(1000),THREE.MathUtils.randFloatSpread(1000))
+  
   scene.add(star)
 }
 
@@ -170,7 +172,6 @@ function animate(){
 
   world.rotateY(0.001);
   world.rotateX(0.001);
-  world.position.y = player.mesh.position.y;
  
   player.update();
 
@@ -193,11 +194,15 @@ function animate(){
   })
 
   if (!(player.mesh.position.y < player.maxYPos - 100)){
+    world.position.y = player.mesh.position.y;
     window.requestAnimationFrame(animate);
     renderer.render(scene, camera)
-  } else {
+  } else if (player.mesh.position.y < world.position.y - world.geometry.parameters.radius){
     alert("You lost! Your score was: " + Math.round(player.maxYPos))
     window.location.reload();
+  } else {
+    window.requestAnimationFrame(animate);
+    renderer.render(scene, camera)
   }
 }
 
