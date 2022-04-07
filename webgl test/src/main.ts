@@ -5,8 +5,8 @@ import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
-const world = new THREE.Mesh(new THREE.SphereGeometry(500, 100, 1000, 100), new THREE.MeshStandardMaterial())
-new THREE.TextureLoader().load("https://images.pexels.com/photos/1205301/pexels-photo-1205301.jpeg", function(texture){
+const world = new THREE.Mesh(new THREE.SphereGeometry(500, 100, 250, 100), new THREE.MeshStandardMaterial())
+new THREE.TextureLoader().load("src/textures/cavebg.png", function(texture){
   world.material.map = texture;
   world.material.wireframe = true;
   scene.add(world);
@@ -24,7 +24,7 @@ const light1 = new THREE.PointLight(0xffffff);
 light1.position.set(0,90,0);
 light1.intensity = 1.5
 
-scene.add(new THREE.AmbientLight(0xff0000, 1.7), light1, new THREE.AmbientLight(0xffffff, 0.5))
+scene.add(new THREE.AmbientLight(0xff0000, 0.2), light1, new THREE.AmbientLight(0xffffff, 0.5))
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
@@ -40,7 +40,7 @@ const player = {
     z : 0
   },
   init : function(){
-    player.mesh.material.map = new THREE.TextureLoader().load("https://images.pexels.com/photos/1205301/pexels-photo-1205301.jpeg");
+    player.mesh.material.map = new THREE.TextureLoader().load("src/textures/slime.jpg");
     this.mesh.position.y = 21;
     this.hitbox.setFromObject(this.mesh);
     this.mesh.castShadow = true;
@@ -105,7 +105,7 @@ const player = {
           this.speed.y = 0.5;
           this.speed.x = 0;
           this.speed.z = 0;
-          canJump = true
+          canJump = true;
         } else {
           canJump = false
         }
@@ -120,7 +120,7 @@ player.init();
 
 const blocks: Block[] = [];
 
-const temp = new Block(25, 0, 25);
+const temp = new Block(25, 0, 25, "src/textures/piston.png");
 blocks.push(temp)
 scene.add(temp)
 
@@ -181,7 +181,7 @@ function animate(){
       blocks[i].falling = true;
     }
 
-    const temp = new Block(getRandomInt(100), player.maxYPos - 20, getRandomInt(100));
+    const temp = new Block(getRandomInt(100), player.maxYPos - 20, getRandomInt(100), "src/textures/piston.png");
     blocks.push(temp)
     scene.add(temp)
   }
