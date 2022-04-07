@@ -5,14 +5,15 @@ import { Block } from "./block";
 
 //* Scene setup
 const scene = new THREE.Scene();
-const world = new THREE.Mesh(new THREE.SphereGeometry(500, 100, 250, 100), new THREE.MeshStandardMaterial())
-new THREE.TextureLoader().load("src/textures/cavebg.png", function(texture){
+const world = new THREE.Mesh(new THREE.SphereGeometry(500, 1000, 250, 100), new THREE.MeshStandardMaterial())
+new THREE.TextureLoader().load("src/textures/netherbg.png", function(texture){
   world.material.map = texture;
   world.material.wireframe = true;
+  world.material.transparent = true
   scene.add(world);
 });
 
-const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector("#canvas") as HTMLCanvasElement 
 });
@@ -171,7 +172,6 @@ function animate(){
   controls.update();
 
   world.rotateY(0.001);
-  world.rotateX(0.001);
  
   player.update();
 
@@ -193,11 +193,23 @@ function animate(){
     }
   })
 
+  if (Math.round(player.maxYPos) == 300){
+    world.material.map = new THREE.TextureLoader().load("src/textures/cavebg.png")
+  } else if (Math.round(player.maxYPos) == 600){
+    world.material.map = new THREE.TextureLoader().load("src/textures/hillsbg.png")
+  } else if (Math.round(player.maxYPos) == 900){
+    world.material.map = new THREE.TextureLoader().load("src/textures/spacebg.jpg")
+  } else if (Math.round(player.maxYPos) == 1200){
+    world.material.map = new THREE.TextureLoader().load("src/textures/end.png")
+  } else if (Math.round(player.maxYPos) == 2000){
+    world.material.map = new THREE.TextureLoader().load("src/textures/wib.png")
+  }
+
   if (!(player.mesh.position.y < player.maxYPos - 100)){
     world.position.y = player.mesh.position.y;
     window.requestAnimationFrame(animate);
     renderer.render(scene, camera)
-  } else if (player.mesh.position.y < world.position.y - world.geometry.parameters.radius){
+  } else if (player.mesh.position.y < 0){
     alert("You lost! Your score was: " + Math.round(player.maxYPos))
     window.location.reload();
   } else {
