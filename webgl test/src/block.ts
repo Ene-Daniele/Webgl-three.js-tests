@@ -1,6 +1,11 @@
 import * as THREE from "three"
 
+/**
+ * Simple class that returns a ready to use object for the player to jump on
+ */
 export class Block extends THREE.Mesh{
+    
+    //Typescript is awesome
     hitbox: THREE.Box3;
     falling: boolean;
 
@@ -9,7 +14,7 @@ export class Block extends THREE.Mesh{
         this.hitbox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
         this.hitbox.setFromObject(this);
         this.position.set(x - 25,y,z - 25);
-        this.receiveShadow = true;
+        this.receiveShadow = true; //This doesnt work lol idk why
         this.castShadow = true;
         this.falling = false;
     }
